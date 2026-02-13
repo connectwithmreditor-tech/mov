@@ -365,16 +365,74 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* ===== Login Overlay ===== */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f0c29;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #e94560, #ff6b81);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .error-msg {
+            color: #ff6b81;
+            font-size: 0.85rem;
+            margin-top: 12px;
+            display: none;
+        }
     </style>
 </head>
 
 <body>
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-card fade-in">
+            <div class="login-title">Admin Login</div>
+            <p style="color: rgba(255,255,255,0.5); margin-bottom: 20px; font-size: 0.9rem;">
+                Enter password to access admin panel
+            </p>
+            <input type="password" id="admin-pass" placeholder="Enter password"
+                style="text-align: center; letter-spacing: 2px;" />
+            <button class="btn-primary" onclick="checkLogin()" style="margin-top: 20px;">Unlock</button>
+            <p class="error-msg" id="login-error">Incorrect password</p>
+        </div>
+    </div>
+
     <header class="header">
         <div class="header__logo">MovieVault</div>
         <div class="header__sub">Admin Panel</div>
     </header>
 
-    <div class="container" id="app">
+    <div class="container" id="app" style="display: none;">
         <!-- GitHub Token Section -->
         <div class="section fade-in">
             <div class="section__title">🔑 GitHub Access</div>
@@ -426,6 +484,34 @@
     </div>
 
     <script>
+        /* ===========================
+           Login Logic
+        =========================== */
+        function checkLogin() {
+            const pass = document.getElementById("admin-pass").value;
+            const error = document.getElementById("login-error");
+
+            if (pass === "Abd123*") {
+                sessionStorage.setItem("mv_admin_session", "true");
+                showApp();
+            } else {
+                error.style.display = "block";
+                document.getElementById("admin-pass").value = "";
+            }
+        }
+
+        function showApp() {
+            document.getElementById("login-overlay").style.display = "none";
+            document.getElementById("app").style.display = "block";
+            // Trigger load if not already loaded
+            if (!currentConfig) loadConfig();
+        }
+
+        // Check session on load
+        if (sessionStorage.getItem("mv_admin_session") === "true") {
+            showApp();
+        }
+
         /* ===========================
            Config
         =========================== */
@@ -745,7 +831,8 @@
         /* ===========================
            Init
         =========================== */
-        loadConfig();
+        // We call loadConfig inside showApp() now to save resources
+        // loadConfig(); 
     </script>
 </body>
 

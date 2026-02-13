@@ -629,38 +629,51 @@
         =========================== */
         async function loadConfig() {
             showStatus("loading", "🚀 Step 1: Starting config load...");
+            console.log("Starting loadConfig...");
 
-            // TIMEOUT FAILSAFE: Force template if load takes too long (5s)
+            // TIMEOUT FAILSAFE: Force template if load takes too long (8s)
             const timeout = setTimeout(() => {
                 if (!currentConfig) {
-                    showStatus("error", "⚠️ Load timed out (5s). Using default template to allow editing.");
+                    console.warn("Load timed out.");
+                    showStatus("error", "⚠️ Load timed out (8s). Using default template.");
                     currentConfig = JSON.parse(JSON.stringify(MOVIES_TEMPLATE));
                     renderMovies(currentConfig);
                 }
-            }, 5000);
+            }, 8000);
 
             try {
-                // 1. Try fetching from GitHub API (most up-to-date, requires token if private, but helps avoid cache)
-                const pat = getPat();
+                // Ensure PAT is loaded from storage if input is empty
+                let pat = getPat();
+                if (!pat) {
+                    pat = localStorage.getItem("mv_admin_pat");
+                    if (pat && document.getElementById("pat-input")) {
+                        document.getElementById("pat-input").value = pat;
+                    }
+                }
+
                 if (pat) {
                     showStatus("loading", "Step 2: Checking GitHub API (using PAT)...");
+                    console.log("Fetching from GitHub API...");
                     const res = await fetch(API_BASE + "?ref=" + GITHUB_BRANCH + "&t=" + Date.now(), {
                         headers: {
                             "Authorization": `Bearer ${pat}`,
                             "Accept": "application/vnd.github.v3+json"
                         }
                     });
+
                     if (res.ok) {
                         clearTimeout(timeout);
                         const data = await res.json();
                         currentSha = data.sha;
                         const content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ""))));
                         currentConfig = JSON.parse(content);
+                        console.log("Loaded from API");
                         renderMovies(currentConfig);
                         renderStatus(currentConfig);
                         showStatus("success", "✅ Config loaded from GitHub API!");
                         return;
                     } else {
+                        console.warn(`API check failed: ${res.status}`);
                         showStatus("loading", `API check failed (${res.status}). Trying fallback...`);
                     }
                 } else {
@@ -673,6 +686,7 @@
                 if (res.ok) {
                     clearTimeout(timeout);
                     currentConfig = await res.json();
+                    console.log("Loaded from Direct Link");
                     renderMovies(currentConfig);
                     renderStatus(currentConfig);
                     showStatus("success", "✅ Loaded successfully (Direct Link)");

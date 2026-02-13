@@ -517,10 +517,9 @@
         =========================== */
         const GITHUB_OWNER = "connectwithmreditor-tech";
         const GITHUB_REPO = "mov";
-        const GITHUB_BRANCH = "master";
-        const CONFIG_PATH = "config.json";
+        const GITHUB_BRANCH = "main";
+        const CONFIG_PATH = "index.html";
         const API_BASE = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${CONFIG_PATH}`;
-        const RAW_URL = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${CONFIG_PATH}`;
 
         let currentConfig = null;
         let currentSha = null;
@@ -584,7 +583,7 @@
                 {
                     title: "Midnight Shadows",
                     poster: "https://picsum.photos/seed/movie2/800/540.jpg",
-                    rating: "7.9", year: "2024", duration: "1h 52min", genre: "Thriller / Mystery",
+                    rating: "7.9", "year": "2024", duration: "1h 52min", genre: "Thriller / Mystery",
                     qualities: [
                         { label: "480p", size: "1 GB", url: "" },
                         { label: "720p", size: "2 GB", url: "" },
@@ -594,7 +593,7 @@
                 {
                     title: "Crimson Horizon",
                     poster: "https://picsum.photos/seed/movie3/800/540.jpg",
-                    rating: "8.2", year: "2025", duration: "2h 15min", genre: "Sci-Fi / Drama",
+                    rating: "8.2", "year": "2025", duration: "2h 15min", genre: "Sci-Fi / Drama",
                     qualities: [
                         { label: "480p", size: "1 GB", url: "" },
                         { label: "720p", size: "2 GB", url: "" },
@@ -604,7 +603,7 @@
                 {
                     title: "Ocean's Echo",
                     poster: "https://picsum.photos/seed/movie4/800/540.jpg",
-                    rating: "7.5", year: "2024", duration: "1h 48min", genre: "Romance / Drama",
+                    rating: "7.5", "year": "2024", duration: "1h 48min", genre: "Romance / Drama",
                     qualities: [
                         { label: "480p", size: "1 GB", url: "" },
                         { label: "720p", size: "2 GB", url: "" },
@@ -755,7 +754,7 @@
         }
 
         /* ===========================
-           Save & Push to GitHub
+           Save & Push to GitHub (Targeting index.html)
         =========================== */
         async function saveAndPush(retry = true) {
             const pat = getPat();
@@ -773,37 +772,62 @@
             const saveBtn = document.getElementById("save-btn");
             saveBtn.disabled = true;
             saveBtn.textContent = retry ? "⏳ Pushing to GitHub..." : "⏳ Retying push...";
-            showStatus("loading", retry ? "Committing config.json to GitHub..." : "Conflict detected! Fetching latest version and retrying...");
+            showStatus("loading", retry ? "Fetching index.html & Updating..." : "Conflict detected! Retrying update...");
 
             try {
-                // Fetch latest SHA first to minimize conflict window
-                if (retry) {
-                    try {
-                        const shaRes = await fetch(API_BASE + `?ref=${GITHUB_BRANCH}&t=` + Date.now(), {
-                            headers: {
-                                "Authorization": `Bearer ${pat}`,
-                                "Accept": "application/vnd.github.v3+json"
-                            }
-                        });
-                        if (shaRes.ok) {
-                            const shaData = await shaRes.json();
-                            currentSha = shaData.sha;
+                // 1. Fetch current index.html content & SHA
+                // We ALWAYS need to fetch content to perform the replacement safely
+                let currentSha = null;
+                let fileContent = "";
+
+                try {
+                    const fileRes = await fetch(API_BASE + `?ref=${GITHUB_BRANCH}&t=` + Date.now(), {
+                        headers: {
+                            "Authorization": `Bearer ${pat}`,
+                            "Accept": "application/vnd.github.v3+json"
                         }
-                    } catch (e) { console.warn("Could not pre-fetch SHA, proceeding with cached SHA"); }
+                    });
+
+                    if (fileRes.ok) {
+                        const fileData = await fileRes.json();
+                        currentSha = fileData.sha;
+                        // Decode content
+                        fileContent = decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, ""))));
+                    } else {
+                        throw new Error(`Failed to fetch index.html (${fileRes.status})`);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showStatus("error", "Could not fetch index.html. Check token/network.");
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = "💾 Save & Push to GitHub";
+                    return;
                 }
 
-                const content = btoa(unescape(encodeURIComponent(JSON.stringify(config, null, 2) + "\n")));
+                // 2. Replace JSON in script tag
+                const newConfigJSON = JSON.stringify(config, null, 2);
+                const regex = /(<script id="movie-data" type="application\/json">)([\s\S]*?)(<\/script>)/;
 
+                if (fileContent.match(regex)) {
+                    fileContent = fileContent.replace(regex, `$1\n${newConfigJSON}\n$3`);
+                } else {
+                    console.error("Could not find script tag in index.html");
+                    showStatus("error", "Critical: <script id='movie-data'> not found in index.html!");
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = "💾 Save & Push to GitHub";
+                    return;
+                }
+
+                // 3. Encode back to Base64
+                const contentEncoded = btoa(unescape(encodeURIComponent(fileContent)));
+
+                // 4. Push Update
                 const body = {
-                    message: `Update config: timer reset, links updated (${new Date().toLocaleString()})`,
-                    content: content,
-                    branch: GITHUB_BRANCH
+                    message: `Update movie links & timer (${new Date().toLocaleString()})`,
+                    content: contentEncoded,
+                    branch: GITHUB_BRANCH,
+                    sha: currentSha
                 };
-
-                // Include SHA if we have it (required for updating existing files)
-                if (currentSha) {
-                    body.sha = currentSha;
-                }
 
                 const res = await fetch(API_BASE, {
                     method: "PUT",
@@ -817,53 +841,36 @@
 
                 if (res.ok) {
                     const data = await res.json();
-                    currentSha = data.content.sha;
-                    currentConfig = config;
                     renderStatus(config);
-                    showStatus("success", "✅ Config pushed! Redirecting to home page...");
+                    showStatus("success", "✅ Website updated! Redirecting to home page...");
 
                     // Redirect after 2 seconds
                     setTimeout(() => {
                         window.location.href = "index.html";
                     }, 2000);
                 } else {
+                    // Handle Conflict (Retry logic)
                     if (res.status === 409 && retry) {
-                        // Conflict! Fetch latest SHA and retry ONCE
-                        showStatus("loading", "⚠️ Conflict detected. Fetching latest version and retrying...");
-                        const shaRes = await fetch(API_BASE + `?ref=${GITHUB_BRANCH}&t=` + Date.now(), {
-                            headers: {
-                                "Authorization": `Bearer ${pat}`,
-                                "Accept": "application/vnd.github.v3+json"
-                            }
-                        });
-                        if (shaRes.ok) {
-                            const shaData = await shaRes.json();
-                            currentSha = shaData.sha;
-                            // Retry recursively with retry=false
-                            await saveAndPush(false);
-                            return;
-                        }
+                        showStatus("loading", "⚠️ Conflict detected. Retrying update...");
+                        await saveAndPush(false); // Recursive retry (will re-fetch SHA & Content)
+                        return;
                     }
 
                     const err = await res.json();
                     if (res.status === 401) {
                         showStatus("error", "❌ Invalid token. Make sure your PAT has 'repo' scope.");
-                    } else if (res.status === 404) {
-                        showStatus("error", "❌ Repository or file not found. The first push needs to be from your PC.");
-                    } else if (res.status === 409) {
-                        showStatus("error", "❌ Conflict — someone else updated the file. Please refresh and try again.");
                     } else {
-                        showStatus("error", `❌ GitHub API error: ${err.message || res.status}`);
+                        showStatus("error", `❌ Error ${res.status}: ${err.message}`);
                     }
-                }
-            } catch (e) {
-                showStatus("error", `❌ Network error: ${e.message}`);
-            } finally {
-                // Only re-enable if we are NOT retrying
-                if (retry) {
                     saveBtn.disabled = false;
                     saveBtn.textContent = "💾 Save & Push to GitHub";
                 }
+
+            } catch (e) {
+                console.error("Save failed:", e);
+                showStatus("error", "❌ Network error. Check console for details.");
+                saveBtn.disabled = false;
+                saveBtn.textContent = "💾 Save & Push to GitHub";
             }
         }
 

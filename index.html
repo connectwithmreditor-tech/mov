@@ -533,38 +533,67 @@
 <body>
     <div id="root"></div>
 
+    <!-- CONFIG DATA (Updated by Admin Panel) -->
+    <script id="movie-data" type="application/json">
+    {
+      "expiryTime": "2026-02-13T12:30:00+05:30",
+      "movies": [
+        {
+          "title": "Epic Adventure",
+          "poster": "https://picsum.photos/seed/movie1/800/540.jpg",
+          "rating": "8.5", "year": "2023", "duration": "2h 28min", "genre": "Action / Adventure",
+          "qualities": [
+            { "label": "480p", "size": "1 GB", "url": "#" },
+            { "label": "720p", "size": "2 GB", "url": "#" },
+            { "label": "1080p", "size": "4 GB", "url": "#" }
+          ]
+        },
+        {
+          "title": "Midnight Shadows",
+          "poster": "https://picsum.photos/seed/movie2/800/540.jpg",
+          "rating": "7.9", "year": "2024", "duration": "1h 52min", "genre": "Thriller / Mystery",
+          "qualities": [
+            { "label": "480p", "size": "1 GB", "url": "#" },
+            { "label": "720p", "size": "2 GB", "url": "#" },
+            { "label": "1080p", "size": "4 GB", "url": "#" }
+          ]
+        },
+        {
+          "title": "Crimson Horizon",
+          "poster": "https://picsum.photos/seed/movie3/800/540.jpg",
+          "rating": "8.2", "year": "2025", "duration": "2h 15min", "genre": "Sci-Fi / Drama",
+          "qualities": [
+            { "label": "480p", "size": "1 GB", "url": "#" },
+            { "label": "720p", "size": "2 GB", "url": "#" },
+            { "label": "1080p", "size": "4 GB", "url": "#" }
+          ]
+        },
+        {
+          "title": "Ocean's Echo",
+          "poster": "https://picsum.photos/seed/movie4/800/540.jpg",
+          "rating": "7.5", "year": "2024", "duration": "1h 48min", "genre": "Romance / Drama",
+          "qualities": [
+            { "label": "480p", "size": "1 GB", "url": "#" },
+            { "label": "720p", "size": "2 GB", "url": "#" },
+            { "label": "1080p", "size": "4 GB", "url": "#" }
+          ]
+        },
+        {
+          "title": "Steel Fury",
+          "poster": "https://picsum.photos/seed/movie5/800/540.jpg",
+          "rating": "8.8", "year": "2025", "duration": "2h 35min", "genre": "Action / War",
+          "qualities": [
+            { "label": "480p", "size": "1 GB", "url": "#" },
+            { "label": "720p", "size": "2 GB", "url": "#" },
+            { "label": "1080p", "size": "4 GB", "url": "#" }
+          ]
+        }
+      ]
+    }
+    </script>
+
     <script type="text/babel">
         const { useState, useEffect, useCallback } = React;
-
-        /* ===========================
-           Config — GitHub Repo
-        =========================== */
-        const GITHUB_OWNER = "connectwithmreditor-tech";
-        const GITHUB_REPO = "mov";
-        const GITHUB_BRANCH = "master";
-        const CONFIG_PATH = "config.json";
-
-        // Raw GitHub URL (with cache-busting on fetch)
-        const RAW_URL = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${CONFIG_PATH}`;
-
-        /* ===========================
-           Fetch config.json
-        =========================== */
-        async function fetchConfig() {
-            // Try raw GitHub URL first (cache-bust with timestamp)
-            try {
-                const res = await fetch(RAW_URL + "?t=" + Date.now(), { cache: "no-store" });
-                if (res.ok) return await res.json();
-            } catch (e) { /* fall through */ }
-
-            // Fallback: try relative path (for local testing / GitHub Pages)
-            try {
-                const res = await fetch("./" + CONFIG_PATH + "?t=" + Date.now(), { cache: "no-store" });
-                if (res.ok) return await res.json();
-            } catch (e) { /* fall through */ }
-
-            return null;
-        }
 
         // Convert config JSON to internal format
         function parseConfig(config) {
@@ -588,27 +617,13 @@
         }
 
         /* ===========================
-           Default Fallback Data
-        =========================== */
-        const FALLBACK_EXPIRY = new Date("2026-02-13T12:30:00+05:30").getTime();
-        const FALLBACK_MOVIES = [
-            {
-                title: "Epic Adventure",
-                poster: "https://picsum.photos/seed/movie1/800/540.jpg",
-                rating: "8.5", year: "2023", duration: "2h 28min", genre: "Action / Adventure",
-                qualities: [
-                    { label: "480p", size: "1 GB", className: "dl-btn--480", url: "#", expiresAt: FALLBACK_EXPIRY },
-                    { label: "720p", size: "2 GB", className: "dl-btn--720", url: "#", expiresAt: FALLBACK_EXPIRY },
-                    { label: "1080p", size: "4 GB", className: "dl-btn--1080", url: "#", expiresAt: FALLBACK_EXPIRY },
-                ],
-            },
-        ];
-
-        /* ===========================
-           Components
+           Components (DownloadIcon, Header, MoviePoster, DownloadButton, DownloadSection, Toast, Footer, BackgroundGlows)
+           ... (Keep as is, defined in original file, just ensuring App logic changes) ... 
         =========================== */
 
-        // --- Download Arrow Icon ---
+        // (Redefine components here if needed, but since I am replacing from line 534...)
+        // Wait, I am replacing from 534 to 850. I need to include ALL components.
+
         function DownloadIcon() {
             return (
                 <svg className="dl-btn__icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -617,7 +632,6 @@
             );
         }
 
-        // --- Header ---
         function Header() {
             return (
                 <header className="header fade-in-up">
@@ -631,16 +645,10 @@
             );
         }
 
-        // --- Movie Card Poster ---
         function MoviePoster({ movie }) {
             return (
                 <div className="movie-poster">
-                    <img
-                        className="movie-poster__img"
-                        src={movie.poster}
-                        alt={`${movie.title} Poster`}
-                        loading="eager"
-                    />
+                    <img className="movie-poster__img" src={movie.poster} alt={`${movie.title} Poster`} loading="eager" />
                     <div className="movie-poster__overlay" />
                     <div className="movie-poster__info">
                         <h1 className="movie-poster__title">{movie.title}</h1>
@@ -655,9 +663,7 @@
             );
         }
 
-        // --- Download Button ---
         function DownloadButton({ quality, onDownload, expired, timeLeft }) {
-            // Format time left nicely
             function formatTime(totalSeconds) {
                 if (totalSeconds <= 0) return "0s";
                 const h = Math.floor(totalSeconds / 3600);
@@ -667,21 +673,13 @@
                 if (m > 0) return `${m}m ${s}s`;
                 return `${s}s`;
             }
-
             const hasLink = quality.url && quality.url !== "#" && quality.url.trim() !== "";
-            // Treat no link as expired
             const isEffectiveExpired = expired || !hasLink;
-
             return (
                 <button
                     className={`dl-btn ${quality.className}${isEffectiveExpired ? " dl-btn--disabled" : ""}`}
                     onClick={() => !isEffectiveExpired && onDownload(quality)}
                     disabled={isEffectiveExpired}
-                    aria-label={
-                        isEffectiveExpired
-                            ? `${quality.label} download link expired`
-                            : `Download in ${quality.label} quality — ${quality.size}`
-                    }
                 >
                     <DownloadIcon />
                     <span className="dl-btn__quality">{quality.label}</span>
@@ -693,7 +691,6 @@
             );
         }
 
-        // --- Download Section ---
         function DownloadSection({ qualities, onDownload, now }) {
             return (
                 <div className="download-section">
@@ -702,91 +699,49 @@
                         {qualities.map((q) => {
                             const expired = q.expiresAt && now >= q.expiresAt;
                             const timeLeft = q.expiresAt ? Math.max(0, Math.ceil((q.expiresAt - now) / 1000)) : null;
-                            return (
-                                <DownloadButton
-                                    key={q.label}
-                                    quality={q}
-                                    onDownload={onDownload}
-                                    expired={expired}
-                                    timeLeft={timeLeft}
-                                />
-                            );
+                            return <DownloadButton key={q.label} quality={q} onDownload={onDownload} expired={expired} timeLeft={timeLeft} />;
                         })}
                     </div>
                 </div>
             );
         }
 
-        // --- Notification Toast ---
         function Toast({ message, visible }) {
-            return (
-                <div className={`toast ${visible ? "toast--visible" : ""}`} role="alert">
-                    {message}
-                </div>
-            );
+            return <div className={`toast ${visible ? "toast--visible" : ""}`} role="alert">{message}</div>;
         }
 
-        // --- Loading Spinner ---
-        function LoadingScreen() {
-            return (
-                <div style={{
-                    display: "flex", flexDirection: "column", alignItems: "center",
-                    justifyContent: "center", minHeight: "60vh", gap: "20px",
-                }}>
-                    <div style={{
-                        width: "48px", height: "48px", border: "3px solid rgba(255,255,255,0.1)",
-                        borderTopColor: "#e94560", borderRadius: "50%",
-                        animation: "spin 0.8s linear infinite",
-                    }} />
-                    <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.9rem" }}>Loading movies...</p>
-                    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                </div>
-            );
-        }
-
-        // --- Footer ---
         function Footer() {
-            const year = new Date().getFullYear();
             return (
                 <footer className="footer fade-in-up fade-in-up--d3">
-                    <p>&copy; {year} MovieVault. All rights reserved. For demonstration purposes only.</p>
+                    <p>&copy; {new Date().getFullYear()} MovieVault. All rights reserved. For demonstration purposes only.</p>
                 </footer>
             );
         }
 
-        // --- Background Glows ---
         function BackgroundGlows() {
-            return (
-                <>
-                    <div className="bg-glow bg-glow--1" />
-                    <div className="bg-glow bg-glow--2" />
-                </>
-            );
+            return <><div className="bg-glow bg-glow--1" /><div className="bg-glow bg-glow--2" /></>;
         }
 
         /* ===========================
            App
         =========================== */
         function App() {
-            const [movies, setMovies] = useState(null);
-            const [loading, setLoading] = useState(true);
+            // Read config from embedded script tag
+            const [movies, setMovies] = useState(() => {
+                try {
+                    const data = document.getElementById("movie-data").textContent;
+                    const config = JSON.parse(data);
+                    return parseConfig(config);
+                } catch (e) {
+                    console.error("Failed to parse embedded movie data", e);
+                    return [];
+                }
+            });
+
             const [toastMsg, setToastMsg] = useState("");
             const [toastVisible, setToastVisible] = useState(false);
             const [now, setNow] = useState(Date.now());
 
-            // Fetch config on mount
-            useEffect(() => {
-                fetchConfig().then(config => {
-                    if (config) {
-                        setMovies(parseConfig(config));
-                    } else {
-                        setMovies(FALLBACK_MOVIES);
-                    }
-                    setLoading(false);
-                });
-            }, []);
-
-            // Tick every second to update countdown + auto-expire
             useEffect(() => {
                 const interval = setInterval(() => setNow(Date.now()), 1000);
                 return () => clearInterval(interval);
@@ -810,9 +765,7 @@
                         clearInterval(interval);
                         showToast(`Downloading ${quality.label} version...`);
                         window.open(quality.url, "_blank");
-                        setTimeout(() => {
-                            showToast(`${quality.label} download started! ✅`, 3500);
-                        }, 2000);
+                        setTimeout(() => showToast(`${quality.label} download started! ✅`, 3500), 2000);
                     }
                 }, 1000);
             }, [showToast]);
@@ -821,27 +774,20 @@
                 <>
                     <BackgroundGlows />
                     <Header />
-                    {loading ? (
-                        <LoadingScreen />
-                    ) : (
-                        <main className="main">
-                            {movies.map((movie, i) => (
-                                <div key={i} className="movie-card fade-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
-                                    <MoviePoster movie={movie} />
-                                    <DownloadSection qualities={movie.qualities} onDownload={handleDownload} now={now} />
-                                </div>
-                            ))}
-                        </main>
-                    )}
+                    <main className="main">
+                        {movies.map((movie, i) => (
+                            <div key={i} className="movie-card fade-in-up" style={{ animationDelay: `${i * 0.1}s` }}>
+                                <MoviePoster movie={movie} />
+                                <DownloadSection qualities={movie.qualities} onDownload={handleDownload} now={now} />
+                            </div>
+                        ))}
+                    </main>
                     <Footer />
                     <Toast message={toastMsg} visible={toastVisible} />
                 </>
             );
         }
 
-        /* ===========================
-           Render
-        =========================== */
         const root = ReactDOM.createRoot(document.getElementById("root"));
         root.render(<App />);
     </script>

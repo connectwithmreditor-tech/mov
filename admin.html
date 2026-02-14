@@ -558,12 +558,28 @@
         =========================== */
         const patInput = document.getElementById("pat-input");
 
-        // Load saved PAT
-        const savedPat = localStorage.getItem("mv_admin_pat");
-        if (savedPat) patInput.value = savedPat;
+        // Check for Hardcoded PAT on load
+        if (typeof HARDCODED_PAT !== 'undefined' && HARDCODED_PAT.trim() !== "") {
+            const pi = document.getElementById("pat-input");
+            if (pi) {
+                pi.value = "🔒 Hardcoded Token Active";
+                pi.disabled = true;
+                pi.style.backgroundColor = "rgba(76, 175, 80, 0.1)";
+                pi.style.borderColor = "#81c784";
+                pi.style.color = "#81c784";
+                pi.style.textAlign = "center";
+                pi.style.fontWeight = "bold";
+            }
+        } else {
+            // Load saved PAT if not hardcoded
+            const savedPat = localStorage.getItem("mv_admin_pat");
+            if (savedPat) patInput.value = savedPat;
+        }
 
         patInput.addEventListener("input", () => {
-            localStorage.setItem("mv_admin_pat", patInput.value.trim());
+            if (!patInput.disabled) {
+                localStorage.setItem("mv_admin_pat", patInput.value.trim());
+            }
         });
 
         function getPat() {

@@ -516,7 +516,7 @@
             const error = document.getElementById("login-error");
 
             if (pass === "Abd123*") {
-                sessionStorage.setItem("mv_admin_session", "true");
+                localStorage.setItem("mv_admin_session", "true");
                 showApp();
             } else {
                 error.style.display = "block";
@@ -532,7 +532,7 @@
         }
 
         // Check session on load
-        if (sessionStorage.getItem("mv_admin_session") === "true") {
+        if (localStorage.getItem("mv_admin_session") === "true") {
             showApp();
         }
 
@@ -543,7 +543,11 @@
         const GITHUB_REPO = "mov";
         const GITHUB_BRANCH = "main";
         const CONFIG_PATH = "config.json";
+
         const API_BASE = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${CONFIG_PATH}`;
+
+        // PASTE YOUR TOKEN HERE TO HARDCODE IT (e.g., "ghp_...")
+        const HARDCODED_PAT = "";
 
         let currentConfig = null;
         let currentSha = null;
@@ -563,6 +567,9 @@
         });
 
         function getPat() {
+            if (HARDCODED_PAT && HARDCODED_PAT.trim() !== "") {
+                return HARDCODED_PAT.trim();
+            }
             return patInput.value.trim();
         }
 
